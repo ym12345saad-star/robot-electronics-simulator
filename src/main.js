@@ -1754,6 +1754,33 @@ function createSmallWire() {
   group.add(wire);
 
 
+
+  group.userData.wire = {
+  id: crypto.randomUUID(),
+
+  endpoints: [
+    {
+      id: crypto.randomUUID(),
+      type: 'wire-end',
+      wire: group
+    },
+    {
+      id: crypto.randomUUID(),
+      type: 'wire-end',
+      wire: group
+    }
+  ]
+};
+
+electricalSystem.registerWire(
+  group.userData.wire
+);
+
+
+
+  
+
+
   group.userData.componentType =
     'wire';
 
