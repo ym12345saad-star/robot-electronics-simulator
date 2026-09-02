@@ -1,1280 +1,375 @@
-import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import './style.css'
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import './style.css';
 
-// ============================================================
-// ROBOT & ELECTRONICS SIMULATOR
-// Session 1 - Interactive 3D Workspace
-// ============================================================
-
-const app = document.querySelector('#app')
-
-// ------------------------------------------------------------
-// Application State
-// ------------------------------------------------------------
+const app = document.querySelector('#app');
 
 const state = {
   screen: 'welcome',
-  selectedTool: null,
-  selectedObject: null,
-  components: [],
-}
-
-// ------------------------------------------------------------
-// Tools
-// ------------------------------------------------------------
+  tool: null,
+  workspace: null,
+};
 
 const tools = [
-  {
-    id: 'wire',
-    icon: '〰',
-    name: 'سلك',
-    description: 'سلك كهربائي قابل للتحريك والتوصيل من الطرفين.',
-  },
-  {
-    id: 'battery',
-    icon: '🔋',
-    name: 'بطارية',
-    description: 'مصدر جهد كهربائي لتغذية الدائرة.',
-  },
-  {
-    id: 'resistor',
-    icon: '▱',
-    name: 'مقاومة',
-    description: 'تستخدم لتقليل التيار وحماية المكونات.',
-  },
-  {
-    id: 'led',
-    icon: '💡',
-    name: 'LED',
-    description: 'صمام ضوئي يصدر الضوء عند مرور التيار في الاتجاه الصحيح.',
-  },
-  {
-    id: 'breadboard',
-    icon: '▦',
-    name: 'Breadboard',
-    description: 'لوحة تجارب لتوصيل المكونات الإلكترونية بدون لحام.',
-  },
-]
+  { id: 'wire', icon: '〰', name: 'سلك', description: 'سلك كهربائي مرن يُستخدم لتوصيل نقاط الدائرة معًا.' },
+  { id: 'battery', icon: '🔋', name: 'بطارية', description: 'مصدر للطاقة الكهربائية، وله قطب موجب وقطب سالب.' },
+  { id: 'resistor', icon: '▱', name: 'مقاومة', description: 'تقلل وتتحكم في التيار الكهربائي داخل الدائرة.' },
+  { id: 'led', icon: '💡', name: 'LED', description: 'صمام ثنائي باعث للضوء، يحتاج إلى توصيل صحيح ومقاومة مناسبة.' },
+  { id: 'breadboard', icon: '▦', name: 'بريدبورد', description: 'لوحة تجارب تسمح بتركيب المكونات وتوصيلها بدون لحام.' },
+];
 
-// ------------------------------------------------------------
-// HTML Screens
-// ------------------------------------------------------------
+function render() {
+  if (state.screen === 'welcome') renderWelcome();
+  else if (state.screen === 'sessions') renderSessions();
+  else renderWorkspace();
+}
 
 function renderWelcome() {
   app.innerHTML = `
     <main class="welcome-screen">
-      <div class="welcome-card">
-        <div class="welcome-badge">ROBOT & ELECTRONICS</div>
-
-        <h1>أهلًا بيك في كورس<br>الروبوت والإلكترونيات</h1>
-
-        <p>
-          تعلّم الإلكترونيات والروبوتات بطريقة تفاعلية
-          داخل بيئة ثلاثية الأبعاد.
-        </p>
-
-        <button id="startButton" class="primary-button">
-          ابدأ 🚀
-        </button>
-      </div>
+      <div class="welcome-glow"></div>
+      <section class="welcome-card">
+        <div class="logo-mark">⚡</div>
+        <div class="eyebrow">ROBOTICS & ELECTRONICS</div>
+        <h1>أهلًا بيك في كورس<br><span>الروبوت والإلكترونيات</span></h1>
+        <p>اتعلم، جرّب، وابني دوائرك الإلكترونية في بيئة ثلاثية الأبعاد.</p>
+        <button class="primary-btn" id="startBtn">ابدأ <span>←</span></button>
+      </section>
     </main>
-  `
-
-  document
-    .querySelector('#startButton')
-    .addEventListener('click', () => {
-      state.screen = 'sessions'
-      render()
-    })
+  `;
+  document.querySelector('#startBtn').onclick = () => {
+    state.screen = 'sessions';
+    render();
+  };
 }
 
 function renderSessions() {
+  const cards = Array.from({ length: 8 }, (_, i) => {
+    const open = i === 0;
+    return `
+      <button class="session-card ${open ? 'open' : 'locked'}" data-session="${i + 1}" ${open ? '' : 'disabled'}>
+        <div class="session-icon">${open ? '▶' : '🔒'}</div>
+        <div class="session-number">سيشن ${i + 1}</div>
+        <div class="session-state">${open ? 'متاح الآن' : 'مغلق'}</div>
+      </button>
+    `;
+  }).join('');
+
   app.innerHTML = `
     <main class="sessions-screen">
-      <header class="page-header">
+      <header class="sessions-header">
         <div>
-          <div class="welcome-badge">ROBOT & ELECTRONICS</div>
-          <h1>الجلسات التعليمية</h1>
-          <p>ابدأ من الجلسة الأولى وتعلم خطوة بخطوة.</p>
+          <div class="eyebrow">ROBOTICS & ELECTRONICS</div>
+          <h1>اختر السيشن</h1>
+          <p>ابدأ من السيشن الأول وتعلّم الأساسيات خطوة بخطوة.</p>
         </div>
+        <div class="progress-pill"><span></span> 1 / 8 مفتوح</div>
       </header>
-
-      <section class="sessions-grid">
-        ${Array.from({ length: 8 }, (_, index) => {
-          const number = index + 1
-          const unlocked = number === 1
-
-          return `
-            <button
-              class="session-card ${unlocked ? 'unlocked' : 'locked'}"
-              data-session="${number}"
-              ${unlocked ? '' : 'disabled'}
-            >
-              <div class="session-number">${number}</div>
-
-              <div class="session-content">
-                <h2>
-                  ${number === 1 ? 'البريدبورد الأساسي' : `Session ${number}`}
-                </h2>
-
-                <p>
-                  ${
-                    number === 1
-                      ? 'تعرف على بيئة المحاكاة والمكونات الأساسية.'
-                      : 'هذه الجلسة مقفولة حاليًا.'
-                  }
-                </p>
-              </div>
-
-              <div class="session-status">
-                ${unlocked ? 'ابدأ ←' : '🔒'}
-              </div>
-            </button>
-          `
-        }).join('')}
-      </section>
+      <section class="sessions-grid">${cards}</section>
     </main>
-  `
+  `;
 
-  document
-    .querySelector('[data-session="1"]')
-    .addEventListener('click', () => {
-      state.screen = 'workspace'
-      render()
-    })
+  document.querySelector('[data-session="1"]').onclick = () => {
+    state.screen = 'workspace';
+    render();
+  };
 }
 
 function renderWorkspace() {
   app.innerHTML = `
     <main class="workspace">
-      <div class="workspace-topbar">
-        <div>
-          <strong>Session 1</strong>
+      <div id="canvas-wrap"></div>
+
+      <header class="topbar">
+        <button class="back-btn" id="backBtn">→ <span>السيشنز</span></button>
+        <div class="workspace-title">
+          <strong>سيشن 1</strong>
           <span>البريدبورد الأساسي</span>
         </div>
+        <div class="status-dot"><i></i> المحاكي يعمل</div>
+      </header>
 
-        <button id="backButton" class="secondary-button">
-          ← الجلسات
-        </button>
-      </div>
-
-      <aside class="tools-panel">
+      <aside class="tool-panel">
         <div class="panel-title">
-          <span>الأدوات</span>
-          <small>اسحب وضع في المشهد</small>
+          <div>
+            <small>TOOLS</small>
+            <h2>الأدوات</h2>
+          </div>
+          <div class="tool-count">5</div>
         </div>
 
-        <div id="toolsList" class="tools-list">
-          ${tools
-            .map(
-              (tool) => `
-                <button
-                  class="tool-item"
-                  draggable="true"
-                  data-tool="${tool.id}"
-                >
-                  <span class="tool-icon">${tool.icon}</span>
+        <div class="tools-list">
+          ${tools.map(t => `
+            <button class="tool-item" data-tool="${t.id}" draggable="true">
+              <span class="tool-icon">${t.icon}</span>
+              <span class="tool-name">${t.name}</span>
+              <span class="tool-arrow">‹</span>
+            </button>
+          `).join('')}
+        </div>
 
-                  <span class="tool-text">
-                    <strong>${tool.name}</strong>
-                    <small>${tool.description}</small>
-                  </span>
-                </button>
-              `,
-            )
-            .join('')}
+        <div class="description-box" id="descriptionBox">
+          <div class="desc-label">الوصف</div>
+          <div class="desc-content">مرّر الماوس على أي أداة لمعرفة وظيفتها.</div>
         </div>
       </aside>
 
-      <div id="descriptionBox" class="description-box">
-        اختر أداة من القائمة لعرض معلومات عنها.
+      <div class="scene-hint">
+        <span>🖱️</span> دوران
+        <span>◉</span> تكبير
+        <span>⇧</span> تحريك
       </div>
 
-      <div id="scene" class="scene"></div>
-
-      <div class="scene-help">
-        <div>🖱️ اسحب المكونات لتحريكها</div>
-        <div>🖱️ اسحب بالزر الأيسر لتحريك الكاميرا</div>
-        <div>⚙️ عجلة الماوس للتكبير والتصغير</div>
+      <div class="scene-badge">
+        <span class="axis x">X</span>
+        <span class="axis y">Y</span>
+        <span class="axis z">Z</span>
       </div>
 
-      <div class="axis-badges">
-        <span class="axis-x">X</span>
-        <span class="axis-y">Y</span>
-        <span class="axis-z">Z</span>
-      </div>
+      <div class="drop-toast" id="dropToast">اسحب الأداة إلى المشهد</div>
     </main>
-  `
+  `;
 
-  document
-    .querySelector('#backButton')
-    .addEventListener('click', () => {
-      state.screen = 'sessions'
-      disposeScene()
-      render()
-    })
+  document.querySelector('#backBtn').onclick = () => {
+    state.screen = 'sessions';
+    state.workspace = null;
+    render();
+  };
 
-  setupToolUI()
-  setupThreeScene()
+  setupWorkspace();
 }
 
-// ------------------------------------------------------------
-// Tool UI
-// ------------------------------------------------------------
+function setupWorkspace() {
+  const container = document.querySelector('#canvas-wrap');
 
-function setupToolUI() {
-  const descriptionBox = document.querySelector('#descriptionBox')
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b0f14);
+  scene.fog = new THREE.Fog(0x0b0f14, 20, 55);
 
-  document.querySelectorAll('.tool-item').forEach((button) => {
-    const toolId = button.dataset.tool
-    const tool = tools.find((item) => item.id === toolId)
+  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 200);
+  camera.position.set(7, 6, 8);
 
-    button.addEventListener('mouseenter', () => {
-      descriptionBox.textContent = tool.description
-    })
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
 
-    button.addEventListener('mouseleave', () => {
-      descriptionBox.textContent =
-        'اسحب أداة من القائمة وأسقطها داخل المشهد.'
-    })
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.target.set(0, 0.5, 0);
+  controls.minDistance = 2.5;
+  controls.maxDistance = 25;
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
 
-    button.addEventListener('click', () => {
-      state.selectedTool = toolId
-
-      document
-        .querySelectorAll('.tool-item')
-        .forEach((item) => item.classList.remove('active'))
-
-      button.classList.add('active')
-
-      descriptionBox.textContent =
-        `الأداة المحددة: ${tool.name}. اسحبها إلى المشهد.`
-    })
-
-    button.addEventListener('dragstart', (event) => {
-      event.dataTransfer.setData('tool-id', toolId)
-      event.dataTransfer.effectAllowed = 'copy'
-    })
-  })
-}
-
-// ------------------------------------------------------------
-// Three.js Variables
-// ------------------------------------------------------------
-
-let scene = null
-let camera = null
-let renderer = null
-let controls = null
-let animationFrame = null
-
-let raycaster = null
-let pointer = null
-let groundPlane = null
-
-let draggedObject = null
-let dragOffset = new THREE.Vector3()
-let dragStartPoint = new THREE.Vector3()
-
-// ------------------------------------------------------------
-// Setup Three.js
-// ------------------------------------------------------------
-
-function setupThreeScene() {
-  const container = document.querySelector('#scene')
-
-  scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x07111f)
-
-  scene.fog = new THREE.Fog(0x07111f, 15, 45)
-
-  camera = new THREE.PerspectiveCamera(
-    55,
-    container.clientWidth / container.clientHeight,
-    0.1,
-    100,
-  )
-
-  camera.position.set(8, 7, 9)
-
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-  })
-
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
-  renderer.setSize(
-    container.clientWidth,
-    container.clientHeight,
-  )
-
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
-
-  container.appendChild(renderer.domElement)
-
-  controls = new OrbitControls(camera, renderer.domElement)
-
-  controls.enableDamping = true
-  controls.dampingFactor = 0.08
-
-  controls.minDistance = 3
-  controls.maxDistance = 25
-
-  controls.target.set(0, 0, 0)
-
-  // ----------------------------------------------------------
-  // Lights
-  // ----------------------------------------------------------
-
-  const hemisphereLight = new THREE.HemisphereLight(
-    0xffffff,
-    0x172033,
-    2,
-  )
-
-  scene.add(hemisphereLight)
-
-  const directionalLight = new THREE.DirectionalLight(
-    0xffffff,
-    3,
-  )
-
-  directionalLight.position.set(6, 10, 5)
-
-  directionalLight.castShadow = true
-
-  directionalLight.shadow.mapSize.set(2048, 2048)
-
-  scene.add(directionalLight)
-
-  const pointLight = new THREE.PointLight(
-    0x66ccff,
-    25,
-    15,
-  )
-
-  pointLight.position.set(-4, 5, 2)
-
-  scene.add(pointLight)
-
-  // ----------------------------------------------------------
   // Ground
-  // ----------------------------------------------------------
-
-  const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111c2d,
-    roughness: 0.8,
-    metalness: 0.05,
-  })
-
-  groundPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 40),
-    groundMaterial,
-  )
-
-  groundPlane.rotation.x = -Math.PI / 2
-  groundPlane.receiveShadow = true
-
-  scene.add(groundPlane)
-
-  // ----------------------------------------------------------
-  // Grid
-  // ----------------------------------------------------------
-
-  const grid = new THREE.GridHelper(
-    40,
-    40,
-    0x3b506d,
-    0x1b2a3e,
-  )
-
-  grid.position.y = 0.01
-
-  scene.add(grid)
-
-  // ----------------------------------------------------------
-  // Center platform
-  // ----------------------------------------------------------
-
-  const platform = new THREE.Mesh(
-    new THREE.BoxGeometry(10, 0.3, 8),
-    new THREE.MeshStandardMaterial({
-      color: 0x16243a,
-      roughness: 0.65,
-      metalness: 0.1,
-    }),
-  )
-
-  platform.position.y = -0.15
-
-  platform.receiveShadow = true
-
-  scene.add(platform)
-
-  // ----------------------------------------------------------
-  // Raycasting
-  // ----------------------------------------------------------
-
-  raycaster = new THREE.Raycaster()
-  pointer = new THREE.Vector2()
-
-  setupSceneInteraction(container)
-
-  window.addEventListener('resize', resizeRenderer)
-
-  animate()
-}
-
-// ------------------------------------------------------------
-// Create Components
-// ------------------------------------------------------------
-
-function createComponent(toolId, position) {
-  let object
-
-  switch (toolId) {
-    case 'led':
-      object = createLED()
-      break
-
-    case 'breadboard':
-      object = createBreadboard()
-      break
-
-    case 'resistor':
-      object = createResistor()
-      break
-
-    case 'battery':
-      object = createBattery()
-      break
-
-    case 'wire':
-      object = createWire()
-      break
-
-    default:
-      object = createGenericComponent(toolId)
-  }
-
-  object.position.copy(position)
-
-  object.userData.isComponent = true
-  object.userData.componentType = toolId
-  object.userData.velocity = new THREE.Vector3()
-  object.userData.isDragging = false
-
-  scene.add(object)
-
-  state.components.push(object)
-
-  return object
-}
-
-// ------------------------------------------------------------
-// Temporary LED
-// ------------------------------------------------------------
-
-function createLED() {
-  const group = new THREE.Group()
-
-  group.name = 'LED'
-
-  // Body
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      0.28,
-      0.28,
-      0.35,
-      24,
-    ),
-    new THREE.MeshStandardMaterial({
-      color: 0x9e2f38,
-      roughness: 0.3,
-      metalness: 0.15,
-    }),
-  )
-
-  body.position.y = 0.28
-
-  body.castShadow = true
-
-  group.add(body)
-
-  // Dome
-  const dome = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      0.28,
-      24,
-      16,
-      0,
-      Math.PI * 2,
-      0,
-      Math.PI / 2,
-    ),
-    new THREE.MeshStandardMaterial({
-      color: 0xff3948,
-      emissive: 0x000000,
-      roughness: 0.2,
-      metalness: 0.05,
-    }),
-  )
-
-  dome.position.y = 0.45
-
-  dome.castShadow = true
-
-  group.add(dome)
-
-  // Legs
-  const legMaterial = new THREE.MeshStandardMaterial({
-    color: 0xb7c0ca,
-    metalness: 0.8,
-    roughness: 0.25,
-  })
-
-  const leg1 = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035, 0.035, 0.8, 10),
-    legMaterial,
-  )
-
-  leg1.position.set(-0.09, -0.1, 0)
-
-  group.add(leg1)
-
-  const leg2 = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.035, 0.035, 0.65, 10),
-    legMaterial,
-  )
-
-  leg2.position.set(0.09, -0.025, 0)
-
-  group.add(leg2)
-
-  // Electrical connection points
-  const pin1 = createElectricalPin(0x00ffff)
-  pin1.position.set(-0.09, -0.5, 0)
-  pin1.userData.pinType = 'anode'
-
-  const pin2 = createElectricalPin(0xff00ff)
-  pin2.position.set(0.09, -0.425, 0)
-  pin2.userData.pinType = 'cathode'
-
-  group.add(pin1)
-  group.add(pin2)
-
-  group.userData.electrical = {
-    type: 'led',
-    pins: {
-      anode: pin1,
-      cathode: pin2,
-    },
-    voltage: 2,
-    current: 0,
-    isOn: false,
-  }
-
-  return group
-}
-
-// ------------------------------------------------------------
-// Breadboard
-// ------------------------------------------------------------
-
-function createBreadboard() {
-  const group = new THREE.Group()
-
-  group.name = 'Breadboard'
-
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(4.5, 0.45, 2.7),
-    new THREE.MeshStandardMaterial({
-      color: 0xf0f0eb,
-      roughness: 0.75,
-    }),
-  )
-
-  body.position.y = 0.3
-
-  body.castShadow = true
-  body.receiveShadow = true
-
-  group.add(body)
-
-  // Hole rows
-  const holeMaterial = new THREE.MeshStandardMaterial({
-    color: 0x151a20,
-    roughness: 0.5,
-  })
-
-  const holeGeometry = new THREE.CylinderGeometry(
-    0.035,
-    0.035,
-    0.04,
-    8,
-  )
-
-  const spacingX = 0.22
-  const spacingZ = 0.22
-
-  const startX = -1.95
-  const startZ = -0.95
-
-  for (let row = 0; row < 10; row++) {
-    for (let col = 0; col < 5; col++) {
-      const hole = new THREE.Mesh(
-        holeGeometry,
-        holeMaterial,
-      )
-
-      hole.rotation.x = Math.PI / 2
-
-      hole.position.set(
-        startX + col * spacingX,
-        0.54,
-        startZ + row * spacingZ,
-      )
-
-      hole.userData.isElectricalPin = true
-      hole.userData.componentType = 'breadboard-hole'
-      hole.userData.row = row
-      hole.userData.column = col
-
-      group.add(hole)
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(60, 60),
+    new THREE.MeshStandardMaterial({ color: 0x111820, roughness: 0.92, metalness: 0.05 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const grid = new THREE.GridHelper(60, 60, 0x34414c, 0x1d2831);
+  grid.position.y = 0.012;
+  scene.add(grid);
+
+  // Lighting
+  scene.add(new THREE.HemisphereLight(0xc9e7ff, 0x182028, 2.0));
+
+  const key = new THREE.DirectionalLight(0xffffff, 3.2);
+  key.position.set(7, 12, 5);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -12;
+  key.shadow.camera.right = 12;
+  key.shadow.camera.top = 12;
+  key.shadow.camera.bottom = -12;
+  scene.add(key);
+
+  const fill = new THREE.PointLight(0x79a8ff, 22, 25);
+  fill.position.set(-7, 5, -4);
+  scene.add(fill);
+
+  // Small origin marker / reference object
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(1.4, 0.18, 1.4),
+    new THREE.MeshStandardMaterial({ color: 0x1a242d, roughness: 0.65 })
+  );
+  base.position.y = 0.09;
+  base.castShadow = true;
+  base.receiveShadow = true;
+  scene.add(base);
+
+  // Demo wire: intentionally simple now; it will be replaced by a real flexible asset.
+  const wire = createDemoWire();
+  wire.position.set(0, 1.35, 0);
+  wire.userData.type = 'wire';
+  scene.add(wire);
+
+  // Two electrical endpoints for the future snap system.
+  const endpointA = createEndpoint();
+  const endpointB = createEndpoint();
+  endpointA.position.set(-0.62, 1.35, 0);
+  endpointB.position.set(0.62, 1.35, 0);
+  scene.add(endpointA, endpointB);
+
+  // Drag/drop from UI.
+  document.querySelectorAll('.tool-item').forEach(btn => {
+    const id = btn.dataset.tool;
+    const tool = tools.find(t => t.id === id);
+
+    btn.addEventListener('mouseenter', () => {
+      document.querySelector('.desc-content').textContent = tool.description;
+    });
+    btn.addEventListener('mouseleave', () => {
+      document.querySelector('.desc-content').textContent = 'مرّر الماوس على أي أداة لمعرفة وظيفتها.';
+    });
+
+    btn.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('application/x-tool', id);
+      document.querySelector('#dropToast').classList.add('show');
+    });
+    btn.addEventListener('dragend', () => {
+      document.querySelector('#dropToast').classList.remove('show');
+    });
+  });
+
+  renderer.domElement.addEventListener('dragover', e => e.preventDefault());
+  renderer.domElement.addEventListener('drop', e => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('application/x-tool');
+    if (!id) return;
+    spawnPlaceholderTool(id, e.clientX, e.clientY, scene, camera);
+    document.querySelector('#dropToast').classList.remove('show');
+  });
+
+  // Basic raycasting so the demo wire can be selected.
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let selected = null;
+
+  renderer.domElement.addEventListener('pointerdown', e => {
+    pointer.x = (e.clientX / innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects([wire], true);
+    if (hits.length) {
+      selected = wire;
+      selected.traverse(o => {
+        if (o.material?.emissive) o.material.emissive.setHex(0x173e54);
+      });
     }
-  }
+  });
 
-  // Second section
-  for (let row = 0; row < 10; row++) {
-    for (let col = 0; col < 5; col++) {
-      const hole = new THREE.Mesh(
-        holeGeometry,
-        holeMaterial,
-      )
-
-      hole.rotation.x = Math.PI / 2
-
-      hole.position.set(
-        startX + 1.55 + col * spacingX,
-        0.54,
-        startZ + row * spacingZ,
-      )
-
-      hole.userData.isElectricalPin = true
-      hole.userData.componentType = 'breadboard-hole'
-      hole.userData.row = row
-      hole.userData.column = col + 5
-
-      group.add(hole)
+  renderer.domElement.addEventListener('pointerup', () => {
+    if (selected) {
+      selected.traverse(o => {
+        if (o.material?.emissive) o.material.emissive.setHex(0x000000);
+      });
+      selected = null;
     }
-  }
+  });
 
-  group.userData.electrical = {
-    type: 'breadboard',
-    holes: [],
-  }
+  const clock = new THREE.Clock();
 
-  return group
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.033);
+
+    // Tiny demo gravity: the wire settles onto the ground.
+    if (!wire.userData.settled) {
+      wire.userData.velocityY = (wire.userData.velocityY ?? 0) - 8.0 * dt;
+      wire.position.y += wire.userData.velocityY * dt;
+      if (wire.position.y <= 0.35) {
+        wire.position.y = 0.35;
+        wire.userData.velocityY = 0;
+        wire.userData.settled = true;
+      }
+      endpointA.position.y = wire.position.y;
+      endpointB.position.y = wire.position.y;
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  state.workspace = { scene, camera, renderer, controls };
 }
 
-// ------------------------------------------------------------
-// Resistor
-// ------------------------------------------------------------
-
-function createResistor() {
-  const group = new THREE.Group()
-
-  group.name = 'Resistor'
-
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      0.13,
-      0.13,
-      1.0,
-      20,
-    ),
-    new THREE.MeshStandardMaterial({
-      color: 0xd8b57c,
-      roughness: 0.55,
-    }),
-  )
-
-  body.rotation.z = Math.PI / 2
-  body.castShadow = true
-
-  group.add(body)
-
-  const leadMaterial = new THREE.MeshStandardMaterial({
-    color: 0xb9c2cc,
-    metalness: 0.8,
-    roughness: 0.25,
-  })
-
-  const lead1 = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      0.025,
-      0.025,
-      0.8,
-      10,
-    ),
-    leadMaterial,
-  )
-
-  lead1.rotation.z = Math.PI / 2
-  lead1.position.x = -0.9
-
-  group.add(lead1)
-
-  const lead2 = lead1.clone()
-
-  lead2.position.x = 0.9
-
-  group.add(lead2)
-
-  group.userData.electrical = {
-    type: 'resistor',
-    resistance: 220,
-    pins: [lead1, lead2],
-  }
-
-  return group
-}
-
-// ------------------------------------------------------------
-// Battery
-// ------------------------------------------------------------
-
-function createBattery() {
-  const group = new THREE.Group()
-
-  group.name = 'Battery'
-
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(1.5, 0.8, 0.8),
-    new THREE.MeshStandardMaterial({
-      color: 0x273447,
-      roughness: 0.55,
-      metalness: 0.15,
-    }),
-  )
-
-  body.position.y = 0.45
-
-  body.castShadow = true
-
-  group.add(body)
-
-  const positive = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.12, 0.15, 16),
-    new THREE.MeshStandardMaterial({
-      color: 0xb9c0c7,
-      metalness: 0.9,
-      roughness: 0.2,
-    }),
-  )
-
-  positive.position.set(0.42, 0.93, 0)
-
-  group.add(positive)
-
-  const negative = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.12, 0.15, 16),
-    new THREE.MeshStandardMaterial({
-      color: 0xb9c0c7,
-      metalness: 0.9,
-      roughness: 0.2,
-    }),
-  )
-
-  negative.position.set(-0.42, 0.93, 0)
-
-  group.add(negative)
-
-  group.userData.electrical = {
-    type: 'battery',
-    voltage: 5,
-    positive,
-    negative,
-  }
-
-  return group
-}
-
-// ------------------------------------------------------------
-// Wire
-// ------------------------------------------------------------
-
-function createWire() {
-  const group = new THREE.Group()
-
-  group.name = 'Wire'
-
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x21c7ff,
-    roughness: 0.45,
-    metalness: 0.2,
-  })
+function createDemoWire() {
+  const group = new THREE.Group();
 
   const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-0.8, 0.5, 0),
-    new THREE.Vector3(0, 0.8, 0),
-    new THREE.Vector3(0.8, 0.5, 0),
-  ])
+    new THREE.Vector3(-0.7, 0, 0),
+    new THREE.Vector3(-0.3, 0.22, 0),
+    new THREE.Vector3(0.15, -0.02, 0),
+    new THREE.Vector3(0.7, 0.12, 0),
+  ]);
 
-  const geometry = new THREE.TubeGeometry(
-    curve,
-    32,
-    0.045,
-    8,
-    false,
-  )
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(curve, 32, 0.055, 10, false),
+    new THREE.MeshStandardMaterial({ color: 0x15191d, roughness: 0.5, metalness: 0.35 })
+  );
+  tube.castShadow = true;
+  group.add(tube);
 
-  const wire = new THREE.Mesh(geometry, material)
-
-  wire.castShadow = true
-
-  group.add(wire)
-
-  const end1 = createElectricalPin(0x00ffff)
-  end1.position.set(-0.8, 0.5, 0)
-
-  const end2 = createElectricalPin(0x00ffff)
-  end2.position.set(0.8, 0.5, 0)
-
-  group.add(end1)
-  group.add(end2)
-
-  group.userData.electrical = {
-    type: 'wire',
-    ends: [end1, end2],
+  const metal = new THREE.MeshStandardMaterial({ color: 0x9aa4aa, roughness: 0.3, metalness: 0.9 });
+  for (const x of [-0.7, 0.7]) {
+    const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.28, 12), metal);
+    pin.rotation.z = Math.PI / 2;
+    pin.position.x = x;
+    pin.castShadow = true;
+    group.add(pin);
   }
-
-  return group
+  return group;
 }
 
-// ------------------------------------------------------------
-// Generic Component
-// ------------------------------------------------------------
-
-function createGenericComponent(toolId) {
-  const group = new THREE.Group()
-
+function createEndpoint() {
   const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 0.7, 1),
-    new THREE.MeshStandardMaterial({
-      color: 0x54657d,
-      roughness: 0.6,
-    }),
-  )
-
-  mesh.position.y = 0.35
-  mesh.castShadow = true
-
-  group.add(mesh)
-
-  return group
+    new THREE.SphereGeometry(0.085, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0x5bd6ff })
+  );
+  mesh.userData.electricalNode = true;
+  return mesh;
 }
 
-// ------------------------------------------------------------
-// Electrical Pin
-// ------------------------------------------------------------
+function spawnPlaceholderTool(id, x, y, scene, camera) {
+  const tool = tools.find(t => t.id === id);
+  const ndc = new THREE.Vector2((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(ndc, camera);
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.55);
+  const point = new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane, point);
 
-function createElectricalPin(color = 0x00ffff) {
-  const pin = new THREE.Mesh(
-    new THREE.SphereGeometry(0.075, 12, 12),
-    new THREE.MeshStandardMaterial({
-      color,
-      emissive: color,
-      emissiveIntensity: 0.35,
-    }),
-  )
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.8, 0.35, 0.55),
+    new THREE.MeshStandardMaterial({ color: 0x2b3741, roughness: 0.7 })
+  );
+  body.castShadow = true;
+  group.add(body);
 
-  pin.userData.isElectricalPin = true
+  group.position.copy(point);
+  group.userData.tool = id;
+  scene.add(group);
 
-  return pin
+  // We intentionally show a neutral placeholder for components until real GLB assets are supplied.
+  console.info(`Placed ${tool.name}. Replace placeholder with ${id}.glb later.`);
 }
 
-// ------------------------------------------------------------
-// Scene Interaction
-// ------------------------------------------------------------
-
-function setupSceneInteraction(container) {
-  renderer.domElement.addEventListener(
-    'pointerdown',
-    onPointerDown,
-  )
-
-  renderer.domElement.addEventListener(
-    'pointermove',
-    onPointerMove,
-  )
-
-  renderer.domElement.addEventListener(
-    'pointerup',
-    onPointerUp,
-  )
-
-  renderer.domElement.addEventListener(
-    'pointercancel',
-    onPointerUp,
-  )
-
-  container.addEventListener('dragover', (event) => {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'copy'
-  })
-
-  container.addEventListener('drop', (event) => {
-    event.preventDefault()
-
-    const toolId = event.dataTransfer.getData('tool-id')
-
-    if (!toolId) return
-
-    const point = getGroundPoint(
-      event.clientX,
-      event.clientY,
-    )
-
-    if (!point) return
-
-    createComponent(
-      toolId,
-      new THREE.Vector3(
-        point.x,
-        getComponentGroundHeight(toolId),
-        point.z,
-      ),
-    )
-  })
-}
-
-// ------------------------------------------------------------
-// Pointer Down
-// ------------------------------------------------------------
-
-function onPointerDown(event) {
-  if (!scene) return
-
-  updatePointer(event)
-
-  raycaster.setFromCamera(pointer, camera)
-
-  const intersections = raycaster.intersectObjects(
-    state.components,
-    true,
-  )
-
-  if (intersections.length === 0) {
-    return
-  }
-
-  let object = intersections[0].object
-
-  while (
-    object.parent &&
-    !object.userData.isComponent
-  ) {
-    object = object.parent
-  }
-
-  if (!object.userData.isComponent) return
-
-  draggedObject = object
-
-  draggedObject.userData.isDragging = true
-
-  state.selectedObject = draggedObject
-
-  // Prevent camera orbit while dragging
-  controls.enabled = false
-
-  const groundPoint = getGroundPoint(
-    event.clientX,
-    event.clientY,
-  )
-
-  if (groundPoint) {
-    dragStartPoint.copy(groundPoint)
-
-    dragOffset.copy(
-      draggedObject.position,
-    ).sub(groundPoint)
-
-    dragOffset.y = 0
-  }
-
-  highlightObject(draggedObject, true)
-}
-
-// ------------------------------------------------------------
-// Pointer Move
-// ------------------------------------------------------------
-
-function onPointerMove(event) {
-  if (!draggedObject) return
-
-  const groundPoint = getGroundPoint(
-    event.clientX,
-    event.clientY,
-  )
-
-  if (!groundPoint) return
-
-  draggedObject.position.x =
-    groundPoint.x + dragOffset.x
-
-  draggedObject.position.z =
-    groundPoint.z + dragOffset.z
-
-  draggedObject.position.y =
-    getComponentGroundHeight(
-      draggedObject.userData.componentType,
-    )
-
-  draggedObject.userData.velocity.set(0, 0, 0)
-}
-
-// ------------------------------------------------------------
-// Pointer Up
-// ------------------------------------------------------------
-
-function onPointerUp() {
-  if (!draggedObject) return
-
-  draggedObject.userData.isDragging = false
-
-  highlightObject(draggedObject, false)
-
-  draggedObject = null
-
-  controls.enabled = true
-}
-
-// ------------------------------------------------------------
-// Ground Raycast
-// ------------------------------------------------------------
-
-function getGroundPoint(clientX, clientY) {
-  const rect = renderer.domElement.getBoundingClientRect()
-
-  pointer.x =
-    ((clientX - rect.left) / rect.width) * 2 - 1
-
-  pointer.y =
-    -((clientY - rect.top) / rect.height) * 2 + 1
-
-  raycaster.setFromCamera(pointer, camera)
-
-  const intersections =
-    raycaster.intersectObject(
-      groundPlane,
-      false,
-    )
-
-  if (intersections.length === 0) {
-    return null
-  }
-
-  return intersections[0].point
-}
-
-// ------------------------------------------------------------
-// Component Height
-// ------------------------------------------------------------
-
-function getComponentGroundHeight(toolId) {
-  switch (toolId) {
-    case 'led':
-      return 0
-
-    case 'breadboard':
-      return 0
-
-    case 'resistor':
-      return 0.2
-
-    case 'battery':
-      return 0
-
-    case 'wire':
-      return 0
-
-    default:
-      return 0
-  }
-}
-
-// ------------------------------------------------------------
-// Highlight Selected Object
-// ------------------------------------------------------------
-
-function highlightObject(object, active) {
-  object.traverse((child) => {
-    if (!child.isMesh) return
-
-    if (!child.userData.originalEmissive) {
-      child.userData.originalEmissive =
-        child.material.emissive
-          ? child.material.emissive.clone()
-          : new THREE.Color(0x000000)
-
-      child.userData.originalEmissiveIntensity =
-        child.material.emissiveIntensity || 0
-    }
-
-    if (active) {
-      if (child.material.emissive) {
-        child.material.emissive.set(0x168cff)
-        child.material.emissiveIntensity = 0.5
-      }
-    } else {
-      if (child.material.emissive) {
-        child.material.emissive.copy(
-          child.userData.originalEmissive,
-        )
-
-        child.material.emissiveIntensity =
-          child.userData.originalEmissiveIntensity
-      }
-    }
-  })
-}
-
-// ------------------------------------------------------------
-// Simple Gravity
-// ------------------------------------------------------------
-
-function updatePhysics(delta) {
-  const gravity = -12
-
-  for (const object of state.components) {
-    if (object.userData.isDragging) continue
-
-    const velocity = object.userData.velocity
-
-    velocity.y += gravity * delta
-
-    object.position.y += velocity.y * delta
-
-    const minimumY = getComponentGroundHeight(
-      object.userData.componentType,
-    )
-
-    if (object.position.y < minimumY) {
-      object.position.y = minimumY
-
-      velocity.y *= -0.18
-
-      if (Math.abs(velocity.y) < 0.15) {
-        velocity.y = 0
-      }
-    }
-  }
-}
-
-// ------------------------------------------------------------
-// Animation
-// ------------------------------------------------------------
-
-let previousTime = performance.now()
-
-function animate() {
-  animationFrame = requestAnimationFrame(animate)
-
-  const currentTime = performance.now()
-
-  const delta = Math.min(
-    (currentTime - previousTime) / 1000,
-    0.05,
-  )
-
-  previousTime = currentTime
-
-  updatePhysics(delta)
-
-  controls.update()
-
-  renderer.render(scene, camera)
-}
-
-// ------------------------------------------------------------
-// Resize
-// ------------------------------------------------------------
-
-function resizeRenderer() {
-  if (!renderer || !camera) return
-
-  const container = document.querySelector('#scene')
-
-  if (!container) return
-
-  camera.aspect =
-    container.clientWidth /
-    container.clientHeight
-
-  camera.updateProjectionMatrix()
-
-  renderer.setSize(
-    container.clientWidth,
-    container.clientHeight,
-  )
-}
-
-// ------------------------------------------------------------
-// Dispose Scene
-// ------------------------------------------------------------
-
-function disposeScene() {
-  if (animationFrame) {
-    cancelAnimationFrame(animationFrame)
-    animationFrame = null
-  }
-
-  window.removeEventListener(
-    'resize',
-    resizeRenderer,
-  )
-
-  if (renderer) {
-    renderer.dispose()
-    renderer.domElement.remove()
-  }
-
-  scene = null
-  camera = null
-  renderer = null
-  controls = null
-  raycaster = null
-  pointer = null
-  groundPlane = null
-  draggedObject = null
-
-  state.components = []
-}
-
-// ------------------------------------------------------------
-// Main Render
-// ------------------------------------------------------------
-
-function render() {
-  if (state.screen === 'welcome') {
-    renderWelcome()
-  }
-
-  if (state.screen === 'sessions') {
-    renderSessions()
-  }
-
-  if (state.screen === 'workspace') {
-    renderWorkspace()
-  }
-}
-
-// ------------------------------------------------------------
-// Start
-// ------------------------------------------------------------
-
-render()
+render();
