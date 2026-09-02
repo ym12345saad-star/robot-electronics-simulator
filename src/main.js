@@ -1170,26 +1170,38 @@ function createLED() {
   group.add(tip2);
 
   // أطراف التوصيل المنطقية للكهرباء
-  group.userData.pins = [
-    {
-      name: 'anode',
-      type: 'positive',
-      position: new THREE.Vector3(
-        -0.055,
-        -0.595,
-        0
-      )
-    },
-    {
-      name: 'cathode',
-      type: 'negative',
-      position: new THREE.Vector3(
-        0.055,
-        -0.495,
-        0
-      )
-    }
-  ];
+ group.userData.pins = [
+
+  {
+    id: crypto.randomUUID(),
+    name: 'anode',
+    type: 'positive',
+    position: new THREE.Vector3(
+      0,
+      -0.49,
+      0
+    ),
+    component: group
+  },
+
+  {
+    id: crypto.randomUUID(),
+    name: 'cathode',
+    type: 'negative',
+    position: new THREE.Vector3(
+      0,
+      -0.44,
+      0
+    ),
+    component: group
+  }
+
+];
+
+
+  group.userData.pins.forEach(pin => {
+  electricalSystem.registerPin(pin);
+});
 
   group.userData.componentType = 'led';
   group.userData.ledMaterial = bodyMaterial;
