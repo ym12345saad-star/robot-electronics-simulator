@@ -1202,6 +1202,10 @@ function createLED() {
   group.userData.pins.forEach(pin => {
   electricalSystem.registerPin(pin);
 });
+  console.log(
+  'LED electrical pins:',
+  electricalSystem.pins.size
+);
 
   group.userData.componentType = 'led';
   group.userData.ledMaterial = bodyMaterial;
