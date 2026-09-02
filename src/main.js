@@ -6,7 +6,7 @@ const app = document.querySelector('#app');
 
 const state = {
   screen: 'welcome',
-  workspace: null,
+  workspace: null
 };
 
 const tools = [
@@ -42,6 +42,11 @@ const tools = [
   }
 ];
 
+
+// =====================================================
+// بداية التطبيق
+// =====================================================
+
 function render() {
   if (state.screen === 'welcome') {
     renderWelcome();
@@ -51,6 +56,11 @@ function render() {
     renderWorkspace();
   }
 }
+
+
+// =====================================================
+// شاشة الترحيب
+// =====================================================
 
 function renderWelcome() {
   app.innerHTML = `
@@ -84,6 +94,11 @@ function renderWelcome() {
   };
 }
 
+
+// =====================================================
+// شاشة السيشنز
+// =====================================================
+
 function renderSessions() {
   const cards = Array.from({ length: 8 }, (_, i) => {
     const open = i === 0;
@@ -95,7 +110,11 @@ function renderSessions() {
         ${open ? '' : 'disabled'}
       >
         <div class="session-icon">${open ? '▶' : '🔒'}</div>
-        <div class="session-number">سيشن ${i + 1}</div>
+
+        <div class="session-number">
+          سيشن ${i + 1}
+        </div>
+
         <div class="session-state">
           ${open ? 'متاح الآن' : 'مغلق'}
         </div>
@@ -108,15 +127,20 @@ function renderSessions() {
 
       <header class="sessions-header">
         <div>
-          <div class="eyebrow">ROBOTICS & ELECTRONICS</div>
+          <div class="eyebrow">
+            ROBOTICS & ELECTRONICS
+          </div>
+
           <h1>اختر السيشن</h1>
+
           <p>
             ابدأ من السيشن الأول وتعلّم الأساسيات خطوة بخطوة.
           </p>
         </div>
 
         <div class="progress-pill">
-          <span></span> 1 / 8 مفتوح
+          <span></span>
+          1 / 8 مفتوح
         </div>
       </header>
 
@@ -132,6 +156,11 @@ function renderSessions() {
     render();
   };
 }
+
+
+// =====================================================
+// مساحة العمل
+// =====================================================
 
 function renderWorkspace() {
   app.innerHTML = `
@@ -151,7 +180,8 @@ function renderWorkspace() {
         </div>
 
         <div class="status-dot">
-          <i></i> المحاكي يعمل
+          <i></i>
+          المحاكي يعمل
         </div>
 
       </header>
@@ -159,41 +189,58 @@ function renderWorkspace() {
       <aside class="tool-panel">
 
         <div class="panel-title">
+
           <div>
             <small>TOOLS</small>
             <h2>الأدوات</h2>
           </div>
 
           <div class="tool-count">5</div>
+
         </div>
 
         <div class="tools-list">
+
           ${tools.map(tool => `
             <button
               class="tool-item"
               data-tool="${tool.id}"
               draggable="true"
             >
-              <span class="tool-icon">${tool.icon}</span>
-              <span class="tool-name">${tool.name}</span>
-              <span class="tool-arrow">‹</span>
+              <span class="tool-icon">
+                ${tool.icon}
+              </span>
+
+              <span class="tool-name">
+                ${tool.name}
+              </span>
+
+              <span class="tool-arrow">
+                ‹
+              </span>
             </button>
           `).join('')}
+
         </div>
 
         <div class="description-box" id="descriptionBox">
-          <div class="desc-label">الوصف</div>
+
+          <div class="desc-label">
+            الوصف
+          </div>
+
           <div class="desc-content">
             مرّر الماوس على أي أداة لمعرفة وظيفتها.
           </div>
+
         </div>
 
       </aside>
 
       <div class="scene-hint">
-        <span>🖱️</span> دوران
-        <span>◉</span> تكبير
-        <span>⇧</span> تحريك
+        <span>🖱️ دوران</span>
+        <span>◉ تكبير</span>
+        <span>⇧ تحريك</span>
       </div>
 
       <div class="scene-badge">
@@ -217,6 +264,11 @@ function renderWorkspace() {
   setupWorkspace();
 }
 
+
+// =====================================================
+// إنشاء المشهد ثلاثي الأبعاد
+// =====================================================
+
 function setupWorkspace() {
   const container = document.querySelector('#canvas-wrap');
 
@@ -230,6 +282,11 @@ function setupWorkspace() {
     55
   );
 
+
+  // ---------------------------------------------------
+  // الكاميرا
+  // ---------------------------------------------------
+
   const camera = new THREE.PerspectiveCamera(
     50,
     innerWidth / innerHeight,
@@ -237,7 +294,16 @@ function setupWorkspace() {
     200
   );
 
-  camera.position.set(7, 6, 8);
+  camera.position.set(
+    7,
+    6,
+    8
+  );
+
+
+  // ---------------------------------------------------
+  // Renderer
+  // ---------------------------------------------------
 
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
@@ -254,13 +320,21 @@ function setupWorkspace() {
   );
 
   renderer.shadowMap.enabled = true;
+
   renderer.shadowMap.type =
     THREE.PCFSoftShadowMap;
 
   renderer.outputColorSpace =
     THREE.SRGBColorSpace;
 
-  container.appendChild(renderer.domElement);
+  container.appendChild(
+    renderer.domElement
+  );
+
+
+  // ---------------------------------------------------
+  // Orbit Controls
+  // ---------------------------------------------------
 
   const controls = new OrbitControls(
     camera,
@@ -270,7 +344,11 @@ function setupWorkspace() {
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
 
-  controls.target.set(0, 0.5, 0);
+  controls.target.set(
+    0,
+    0.5,
+    0
+  );
 
   controls.minDistance = 2.5;
   controls.maxDistance = 25;
@@ -281,12 +359,17 @@ function setupWorkspace() {
   controls.enablePan = true;
   controls.screenSpacePanning = true;
 
-  // =========================
+
+  // ---------------------------------------------------
   // الأرضية
-  // =========================
+  // ---------------------------------------------------
 
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(60, 60),
+    new THREE.PlaneGeometry(
+      60,
+      60
+    ),
+
     new THREE.MeshStandardMaterial({
       color: 0x111820,
       roughness: 0.92,
@@ -294,10 +377,17 @@ function setupWorkspace() {
     })
   );
 
-  ground.rotation.x = -Math.PI / 2;
+  ground.rotation.x =
+    -Math.PI / 2;
+
   ground.receiveShadow = true;
 
   scene.add(ground);
+
+
+  // ---------------------------------------------------
+  // Grid
+  // ---------------------------------------------------
 
   const grid = new THREE.GridHelper(
     60,
@@ -310,9 +400,10 @@ function setupWorkspace() {
 
   scene.add(grid);
 
-  // =========================
+
+  // ---------------------------------------------------
   // الإضاءة
-  // =========================
+  // ---------------------------------------------------
 
   scene.add(
     new THREE.HemisphereLight(
@@ -321,6 +412,7 @@ function setupWorkspace() {
       2
     )
   );
+
 
   const keyLight =
     new THREE.DirectionalLight(
@@ -343,6 +435,7 @@ function setupWorkspace() {
 
   scene.add(keyLight);
 
+
   const fillLight =
     new THREE.PointLight(
       0x79a8ff,
@@ -358,9 +451,10 @@ function setupWorkspace() {
 
   scene.add(fillLight);
 
-  // =========================
-  // منصة بسيطة
-  // =========================
+
+  // ---------------------------------------------------
+  // منصة
+  // ---------------------------------------------------
 
   const base = new THREE.Mesh(
     new THREE.BoxGeometry(
@@ -368,6 +462,7 @@ function setupWorkspace() {
       0.18,
       1.4
     ),
+
     new THREE.MeshStandardMaterial({
       color: 0x1a242d,
       roughness: 0.65
@@ -375,14 +470,16 @@ function setupWorkspace() {
   );
 
   base.position.y = 0.09;
+
   base.castShadow = true;
   base.receiveShadow = true;
 
   scene.add(base);
 
-  // =========================
+
+  // ---------------------------------------------------
   // السلك التجريبي
-  // =========================
+  // ---------------------------------------------------
 
   const wire = createDemoWire();
 
@@ -396,11 +493,13 @@ function setupWorkspace() {
 
   scene.add(wire);
 
+
   const endpointA =
     createEndpoint();
 
   const endpointB =
     createEndpoint();
+
 
   endpointA.position.set(
     -0.62,
@@ -419,9 +518,10 @@ function setupWorkspace() {
     endpointB
   );
 
-  // =========================
-  // أدوات السحب
-  // =========================
+
+  // ---------------------------------------------------
+  // أدوات السحب من القائمة
+  // ---------------------------------------------------
 
   document
     .querySelectorAll('.tool-item')
@@ -435,25 +535,32 @@ function setupWorkspace() {
           item => item.id === id
         );
 
+
       button.addEventListener(
         'mouseenter',
         () => {
+
           document.querySelector(
             '.desc-content'
           ).textContent =
             tool.description;
+
         }
       );
+
 
       button.addEventListener(
         'mouseleave',
         () => {
+
           document.querySelector(
             '.desc-content'
           ).textContent =
             'مرّر الماوس على أي أداة لمعرفة وظيفتها.';
+
         }
       );
+
 
       button.addEventListener(
         'dragstart',
@@ -467,18 +574,28 @@ function setupWorkspace() {
           document
             .querySelector('#dropToast')
             .classList.add('show');
+
         }
       );
+
 
       button.addEventListener(
         'dragend',
         () => {
+
           document
             .querySelector('#dropToast')
             .classList.remove('show');
+
         }
       );
+
     });
+
+
+  // ---------------------------------------------------
+  // استقبال الأداة داخل المشهد
+  // ---------------------------------------------------
 
   renderer.domElement.addEventListener(
     'dragover',
@@ -486,6 +603,7 @@ function setupWorkspace() {
       event.preventDefault();
     }
   );
+
 
   renderer.domElement.addEventListener(
     'drop',
@@ -511,12 +629,14 @@ function setupWorkspace() {
       document
         .querySelector('#dropToast')
         .classList.remove('show');
+
     }
   );
 
-  // =========================
+
+  // ---------------------------------------------------
   // تحريك المكونات
-  // =========================
+  // ---------------------------------------------------
 
   setupObjectDragging(
     renderer,
@@ -525,12 +645,14 @@ function setupWorkspace() {
     controls
   );
 
-  // =========================
-  // الأنيميشن
-  // =========================
+
+  // ---------------------------------------------------
+  // Animation
+  // ---------------------------------------------------
 
   const clock =
     new THREE.Clock();
+
 
   function animate() {
 
@@ -538,12 +660,15 @@ function setupWorkspace() {
       animate
     );
 
+
     const dt =
       Math.min(
         clock.getDelta(),
         0.033
       );
 
+
+    // سقوط السلك التجريبي
     if (!wire.userData.settled) {
 
       wire.userData.velocityY =
@@ -552,6 +677,7 @@ function setupWorkspace() {
 
       wire.position.y +=
         wire.userData.velocityY * dt;
+
 
       if (
         wire.position.y <= 0.35
@@ -562,14 +688,18 @@ function setupWorkspace() {
         wire.userData.velocityY = 0;
 
         wire.userData.settled = true;
+
       }
+
 
       endpointA.position.y =
         wire.position.y;
 
       endpointB.position.y =
         wire.position.y;
+
     }
+
 
     controls.update();
 
@@ -577,9 +707,16 @@ function setupWorkspace() {
       scene,
       camera
     );
+
   }
 
+
   animate();
+
+
+  // ---------------------------------------------------
+  // Resize
+  // ---------------------------------------------------
 
   window.addEventListener(
     'resize',
@@ -594,8 +731,10 @@ function setupWorkspace() {
         innerWidth,
         innerHeight
       );
+
     }
   );
+
 
   state.workspace = {
     scene,
@@ -605,14 +744,16 @@ function setupWorkspace() {
   };
 }
 
+
 // =====================================================
-// إنشاء سلك
+// إنشاء السلك التجريبي
 // =====================================================
 
 function createDemoWire() {
 
   const group =
     new THREE.Group();
+
 
   const curve =
     new THREE.CatmullRomCurve3([
@@ -621,22 +762,26 @@ function createDemoWire() {
         0,
         0
       ),
+
       new THREE.Vector3(
         -0.3,
         0.22,
         0
       ),
+
       new THREE.Vector3(
         0.15,
         -0.02,
         0
       ),
+
       new THREE.Vector3(
         0.7,
         0.12,
         0
       )
     ]);
+
 
   const tube =
     new THREE.Mesh(
@@ -647,6 +792,7 @@ function createDemoWire() {
         10,
         false
       ),
+
       new THREE.MeshStandardMaterial({
         color: 0x15191d,
         roughness: 0.5,
@@ -654,9 +800,11 @@ function createDemoWire() {
       })
     );
 
+
   tube.castShadow = true;
 
   group.add(tube);
+
 
   const metal =
     new THREE.MeshStandardMaterial({
@@ -664,6 +812,7 @@ function createDemoWire() {
       roughness: 0.3,
       metalness: 0.9
     });
+
 
   for (
     const x of [-0.7, 0.7]
@@ -688,10 +837,13 @@ function createDemoWire() {
     pin.castShadow = true;
 
     group.add(pin);
+
   }
+
 
   return group;
 }
+
 
 // =====================================================
 // نقطة كهربائية
@@ -706,16 +858,19 @@ function createEndpoint() {
         16,
         16
       ),
+
       new THREE.MeshBasicMaterial({
         color: 0x5bd6ff
       })
     );
+
 
   mesh.userData.electricalNode =
     true;
 
   return mesh;
 }
+
 
 // =====================================================
 // إنشاء المكونات
@@ -735,13 +890,16 @@ function spawnComponent(
       -(screenY / innerHeight) * 2 + 1
     );
 
+
   const raycaster =
     new THREE.Raycaster();
+
 
   raycaster.setFromCamera(
     ndc,
     camera
   );
+
 
   const plane =
     new THREE.Plane(
@@ -753,15 +911,19 @@ function spawnComponent(
       -0.45
     );
 
+
   const point =
     new THREE.Vector3();
+
 
   raycaster.ray.intersectPlane(
     plane,
     point
   );
 
+
   let object;
+
 
   if (id === 'led') {
     object = createLED();
@@ -783,18 +945,23 @@ function spawnComponent(
     object = createSmallWire();
   }
 
+
   if (!object) return;
+
 
   object.position.copy(point);
 
   object.userData.draggable = true;
+
   object.userData.tool = id;
+
 
   scene.add(object);
 }
 
+
 // =====================================================
-// LED حقيقي الشكل
+// LED - الشكل الجديد
 // =====================================================
 
 function createLED() {
@@ -802,94 +969,265 @@ function createLED() {
   const group =
     new THREE.Group();
 
+
+  // ---------------------------------------------------
+  // خامات
+  // ---------------------------------------------------
+
   const metalMaterial =
     new THREE.MeshStandardMaterial({
-      color: 0x9da3a8,
+      color: 0xb8bdc1,
       metalness: 0.9,
-      roughness: 0.25
+      roughness: 0.22
     });
 
-  const redMaterial =
-    new THREE.MeshStandardMaterial({
-      color: 0xff1e32,
-      emissive: 0x3d0005,
-      emissiveIntensity: 0.8,
-      roughness: 0.25,
-      metalness: 0.05
+
+  const plasticMaterial =
+    new THREE.MeshPhysicalMaterial({
+      color: 0xff1d2e,
+      roughness: 0.18,
+      metalness: 0,
+      transmission: 0.08,
+      transparent: true,
+      opacity: 0.92,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.12,
+      emissive: 0x260006,
+      emissiveIntensity: 0.35
     });
+
+
+  const darkMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x25282b,
+      roughness: 0.45,
+      metalness: 0.25
+    });
+
+
+  // ---------------------------------------------------
+  // جسم الـ LED السفلي
+  // ---------------------------------------------------
 
   const body =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
-        0.14,
-        0.14,
-        0.20,
-        24
+        0.18,
+        0.18,
+        0.18,
+        32
       ),
-      redMaterial
+      plasticMaterial
     );
 
-  body.rotation.z =
-    Math.PI / 2;
 
-  body.position.x = 0;
+  body.position.y = 0.34;
+
+  body.castShadow = true;
+  body.receiveShadow = true;
 
   group.add(body);
+
+
+  // ---------------------------------------------------
+  // قبة الـ LED
+  // ---------------------------------------------------
 
   const dome =
     new THREE.Mesh(
       new THREE.SphereGeometry(
-        0.14,
+        0.18,
+        32,
         24,
-        16,
         0,
         Math.PI * 2,
         0,
         Math.PI / 2
       ),
-      redMaterial
+      plasticMaterial
     );
 
-  dome.rotation.z =
-    -Math.PI / 2;
 
-  dome.position.x =
-    0.10;
+  dome.position.y = 0.43;
+
+  dome.castShadow = true;
+  dome.receiveShadow = true;
 
   group.add(dome);
 
-  for (
-    const side of [-1, 1]
-  ) {
 
-    const leg =
-      new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          0.018,
-          0.018,
-          0.55,
-          10
-        ),
-        metalMaterial
-      );
+  // ---------------------------------------------------
+  // حلقة صغيرة أسفل الجسم
+  // ---------------------------------------------------
 
-    leg.rotation.z =
-      Math.PI / 2;
+  const collar =
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.185,
+        0.185,
+        0.055,
+        32
+      ),
+      darkMaterial
+    );
 
-    leg.position.x =
-      side * 0.32;
 
-    group.add(leg);
-  }
+  collar.position.y = 0.245;
 
-  group.rotation.z =
-    Math.PI / 2;
+  collar.castShadow = true;
+
+  group.add(collar);
+
+
+  // ---------------------------------------------------
+  // الرجل الطويلة - Anode
+  // ---------------------------------------------------
+
+  const longLeg =
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.025,
+        0.025,
+        0.72,
+        12
+      ),
+      metalMaterial
+    );
+
+
+  longLeg.position.set(
+    -0.075,
+    -0.05,
+    0
+  );
+
+
+  longLeg.castShadow = true;
+
+  group.add(longLeg);
+
+
+  // ---------------------------------------------------
+  // الرجل القصيرة - Cathode
+  // ---------------------------------------------------
+
+  const shortLeg =
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.025,
+        0.025,
+        0.58,
+        12
+      ),
+      metalMaterial
+    );
+
+
+  shortLeg.position.set(
+    0.075,
+    -0.12,
+    0
+  );
+
+
+  shortLeg.castShadow = true;
+
+  group.add(shortLeg);
+
+
+  // ---------------------------------------------------
+  // أطراف صغيرة في نهاية الأرجل
+  // ---------------------------------------------------
+
+  const longTip =
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.028,
+        0.028,
+        0.08,
+        12
+      ),
+      metalMaterial
+    );
+
+
+  longTip.position.set(
+    -0.075,
+    -0.45,
+    0
+  );
+
+
+  longTip.castShadow = true;
+
+  group.add(longTip);
+
+
+  const shortTip =
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.028,
+        0.028,
+        0.08,
+        12
+      ),
+      metalMaterial
+    );
+
+
+  shortTip.position.set(
+    0.075,
+    -0.40,
+    0
+  );
+
+
+  shortTip.castShadow = true;
+
+  group.add(shortTip);
+
+
+  // ---------------------------------------------------
+  // البيانات الكهربائية
+  // ---------------------------------------------------
+
+  group.userData.pins = [
+    {
+      name: 'anode',
+      type: 'positive',
+      position: new THREE.Vector3(
+        -0.075,
+        -0.49,
+        0
+      )
+    },
+
+    {
+      name: 'cathode',
+      type: 'negative',
+      position: new THREE.Vector3(
+        0.075,
+        -0.44,
+        0
+      )
+    }
+  ];
+
+
+  group.userData.componentType =
+    'led';
+
+
+  group.userData.ledMaterial =
+    plasticMaterial;
+
 
   return group;
 }
 
+
 // =====================================================
-// مقاومة
+// المقاومة
 // =====================================================
 
 function createResistor() {
@@ -897,11 +1235,13 @@ function createResistor() {
   const group =
     new THREE.Group();
 
+
   const bodyMaterial =
     new THREE.MeshStandardMaterial({
       color: 0xd6c49a,
       roughness: 0.55
     });
+
 
   const metal =
     new THREE.MeshStandardMaterial({
@@ -909,6 +1249,7 @@ function createResistor() {
       metalness: 0.9,
       roughness: 0.25
     });
+
 
   const body =
     new THREE.Mesh(
@@ -921,10 +1262,48 @@ function createResistor() {
       bodyMaterial
     );
 
+
   body.rotation.z =
     Math.PI / 2;
 
+  body.castShadow = true;
+
   group.add(body);
+
+
+  // حلقات المقاومة
+  const bandMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x8b4a2f,
+      roughness: 0.5
+    });
+
+
+  for (
+    const x of [-0.12, 0, 0.12]
+  ) {
+
+    const band =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.112,
+          0.012,
+          8,
+          24
+        ),
+        bandMaterial
+      );
+
+
+    band.rotation.y =
+      Math.PI / 2;
+
+    band.position.x = x;
+
+    group.add(band);
+
+  }
+
 
   for (
     const x of [-0.55, 0.55]
@@ -941,25 +1320,57 @@ function createResistor() {
         metal
       );
 
+
     leg.rotation.z =
       Math.PI / 2;
 
     leg.position.x = x;
 
+    leg.castShadow = true;
+
     group.add(leg);
+
   }
+
+
+  group.userData.pins = [
+    {
+      name: 'pin1',
+      position: new THREE.Vector3(
+        -0.9,
+        0,
+        0
+      )
+    },
+
+    {
+      name: 'pin2',
+      position: new THREE.Vector3(
+        0.9,
+        0,
+        0
+      )
+    }
+  ];
+
+
+  group.userData.componentType =
+    'resistor';
+
 
   return group;
 }
 
+
 // =====================================================
-// بطارية
+// البطارية
 // =====================================================
 
 function createBattery() {
 
   const group =
     new THREE.Group();
+
 
   const body =
     new THREE.Mesh(
@@ -969,6 +1380,7 @@ function createBattery() {
         0.75,
         32
       ),
+
       new THREE.MeshStandardMaterial({
         color: 0x20252b,
         metalness: 0.25,
@@ -976,8 +1388,13 @@ function createBattery() {
       })
     );
 
+
+  body.castShadow = true;
+
   group.add(body);
 
+
+  // القطب الموجب
   const positive =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
@@ -986,6 +1403,7 @@ function createBattery() {
         0.08,
         24
       ),
+
       new THREE.MeshStandardMaterial({
         color: 0xc9cdd1,
         metalness: 0.9,
@@ -993,11 +1411,16 @@ function createBattery() {
       })
     );
 
+
   positive.position.y =
     0.41;
 
+  positive.castShadow = true;
+
   group.add(positive);
 
+
+  // القطب السالب
   const negative =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
@@ -1006,6 +1429,7 @@ function createBattery() {
         0.04,
         24
       ),
+
       new THREE.MeshStandardMaterial({
         color: 0x777e83,
         metalness: 0.8,
@@ -1013,13 +1437,43 @@ function createBattery() {
       })
     );
 
+
   negative.position.y =
     -0.395;
 
   group.add(negative);
 
+
+  group.userData.pins = [
+    {
+      name: 'positive',
+      type: 'positive',
+      position: new THREE.Vector3(
+        0,
+        0.45,
+        0
+      )
+    },
+
+    {
+      name: 'negative',
+      type: 'negative',
+      position: new THREE.Vector3(
+        0,
+        -0.42,
+        0
+      )
+    }
+  ];
+
+
+  group.userData.componentType =
+    'battery';
+
+
   return group;
 }
+
 
 // =====================================================
 // Breadboard
@@ -1030,6 +1484,7 @@ function createBreadboard() {
   const group =
     new THREE.Group();
 
+
   const board =
     new THREE.Mesh(
       new THREE.BoxGeometry(
@@ -1037,16 +1492,23 @@ function createBreadboard() {
         0.22,
         2.0
       ),
+
       new THREE.MeshStandardMaterial({
         color: 0xe8e7df,
         roughness: 0.8
       })
     );
 
+
   board.castShadow = true;
   board.receiveShadow = true;
 
   group.add(board);
+
+
+  // ---------------------------------------------------
+  // فتحات البريدبورد
+  // ---------------------------------------------------
 
   const holeMaterial =
     new THREE.MeshStandardMaterial({
@@ -1054,7 +1516,7 @@ function createBreadboard() {
       roughness: 0.5
     });
 
-  // فتحات تجريبية
+
   for (
     let x = -1.45;
     x <= 1.45;
@@ -1078,8 +1540,10 @@ function createBreadboard() {
           holeMaterial
         );
 
+
       hole.rotation.x =
         Math.PI / 2;
+
 
       hole.position.set(
         x,
@@ -1087,22 +1551,23 @@ function createBreadboard() {
         z
       );
 
+
       group.add(hole);
+
     }
   }
 
-  // خطوط التغذية
+
+  // ---------------------------------------------------
+  // خط التغذية الأحمر
+  // ---------------------------------------------------
+
   const railMaterial =
     new THREE.MeshStandardMaterial({
       color: 0xc84d55,
       roughness: 0.5
     });
 
-  const blueMaterial =
-    new THREE.MeshStandardMaterial({
-      color: 0x4268b3,
-      roughness: 0.5
-    });
 
   const redRail =
     new THREE.Mesh(
@@ -1114,13 +1579,27 @@ function createBreadboard() {
       railMaterial
     );
 
+
   redRail.position.set(
     0,
     0.13,
     0.86
   );
 
+
   group.add(redRail);
+
+
+  // ---------------------------------------------------
+  // خط التغذية الأزرق
+  // ---------------------------------------------------
+
+  const blueMaterial =
+    new THREE.MeshStandardMaterial({
+      color: 0x4268b3,
+      roughness: 0.5
+    });
+
 
   const blueRail =
     new THREE.Mesh(
@@ -1132,25 +1611,34 @@ function createBreadboard() {
       blueMaterial
     );
 
+
   blueRail.position.set(
     0,
     0.13,
     -0.86
   );
 
+
   group.add(blueRail);
+
+
+  group.userData.componentType =
+    'breadboard';
+
 
   return group;
 }
 
+
 // =====================================================
-// سلك صغير
+// السلك الصغير
 // =====================================================
 
 function createSmallWire() {
 
   const group =
     new THREE.Group();
+
 
   const curve =
     new THREE.CatmullRomCurve3([
@@ -1159,22 +1647,26 @@ function createSmallWire() {
         0,
         0
       ),
+
       new THREE.Vector3(
         -0.3,
         0.3,
         0
       ),
+
       new THREE.Vector3(
         0.3,
         -0.1,
         0
       ),
+
       new THREE.Vector3(
         0.8,
         0,
         0
       )
     ]);
+
 
   const wire =
     new THREE.Mesh(
@@ -1185,6 +1677,7 @@ function createSmallWire() {
         8,
         false
       ),
+
       new THREE.MeshStandardMaterial({
         color: 0xd52c35,
         roughness: 0.5,
@@ -1192,10 +1685,19 @@ function createSmallWire() {
       })
     );
 
+
+  wire.castShadow = true;
+
   group.add(wire);
+
+
+  group.userData.componentType =
+    'wire';
+
 
   return group;
 }
+
 
 // =====================================================
 // تحريك العناصر
@@ -1211,19 +1713,29 @@ function setupObjectDragging(
   const raycaster =
     new THREE.Raycaster();
 
+
   const mouse =
     new THREE.Vector2();
+
 
   const plane =
     new THREE.Plane();
 
+
   const intersection =
     new THREE.Vector3();
+
 
   const offset =
     new THREE.Vector3();
 
+
   let selected = null;
+
+
+  // ---------------------------------------------------
+  // بداية السحب
+  // ---------------------------------------------------
 
   renderer.domElement.addEventListener(
     'pointerdown',
@@ -1235,25 +1747,33 @@ function setupObjectDragging(
       mouse.y =
         -(event.clientY / innerHeight) * 2 + 1;
 
+
       raycaster.setFromCamera(
         mouse,
         camera
       );
 
-      const draggableObjects =
-        [];
 
-      scene.traverse(object => {
+      const draggableObjects = [];
 
-        if (
-          object.userData &&
-          object.userData.draggable
-        ) {
-          draggableObjects.push(
-            object
-          );
+
+      scene.traverse(
+        object => {
+
+          if (
+            object.userData &&
+            object.userData.draggable
+          ) {
+
+            draggableObjects.push(
+              object
+            );
+
+          }
+
         }
-      });
+      );
+
 
       const hits =
         raycaster.intersectObjects(
@@ -1261,23 +1781,32 @@ function setupObjectDragging(
           true
         );
 
+
       if (!hits.length) return;
+
 
       let object =
         hits[0].object;
+
 
       while (
         object.parent &&
         !object.userData.draggable
       ) {
+
         object =
           object.parent;
+
       }
+
 
       selected = object;
 
+
       controls.enabled = false;
 
+
+      // مستوى السحب
       plane.set(
         new THREE.Vector3(
           0,
@@ -1287,17 +1816,25 @@ function setupObjectDragging(
         -selected.position.y
       );
 
+
       raycaster.ray.intersectPlane(
         plane,
         intersection
       );
 
+
       offset.subVectors(
         selected.position,
         intersection
       );
+
     }
   );
+
+
+  // ---------------------------------------------------
+  // أثناء السحب
+  // ---------------------------------------------------
 
   renderer.domElement.addEventListener(
     'pointermove',
@@ -1305,16 +1842,19 @@ function setupObjectDragging(
 
       if (!selected) return;
 
+
       mouse.x =
         (event.clientX / innerWidth) * 2 - 1;
 
       mouse.y =
         -(event.clientY / innerHeight) * 2 + 1;
 
+
       raycaster.setFromCamera(
         mouse,
         camera
       );
+
 
       if (
         raycaster.ray.intersectPlane(
@@ -1327,12 +1867,20 @@ function setupObjectDragging(
           intersection
         );
 
+
         selected.position.add(
           offset
         );
+
       }
+
     }
   );
+
+
+  // ---------------------------------------------------
+  // انتهاء السحب
+  // ---------------------------------------------------
 
   renderer.domElement.addEventListener(
     'pointerup',
@@ -1340,11 +1888,18 @@ function setupObjectDragging(
 
       if (!selected) return;
 
+
       selected = null;
 
       controls.enabled = true;
+
     }
   );
 }
+
+
+// =====================================================
+// تشغيل البرنامج
+// =====================================================
 
 render();
