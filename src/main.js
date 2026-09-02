@@ -43,6 +43,30 @@ const tools = [
 ];
 
 
+// ============================================
+// Electrical Connection System
+// ============================================
+
+const electricalSystem = {
+
+  pins: new Map(),
+  wires: new Map(),
+
+  registerPin(pin) {
+    this.pins.set(pin.id, pin);
+  },
+
+  registerWire(wire) {
+    this.wires.set(wire.id, wire);
+  },
+
+  getPin(id) {
+    return this.pins.get(id);
+  }
+
+};
+
+
 // =====================================================
 // بداية التطبيق
 // =====================================================
