@@ -1179,112 +1179,186 @@ function createLED() {
 
 function createResistor() {
 
-  const group =
-    new THREE.Group();
+  const group = new THREE.Group();
 
+  // =====================================================
+  // المواد
+  // =====================================================
 
-  const bodyMaterial =
-    new THREE.MeshStandardMaterial({
-      color: 0xd6c49a,
-      roughness: 0.55
-    });
+  // جسم المقاومة السيراميكي
+  const bodyMaterial = new THREE.MeshStandardMaterial({
+    color: 0xd8c39a,
+    roughness: 0.48,
+    metalness: 0.0
+  });
 
+  // المعدن الخاص بالأرجل
+  const metalMaterial = new THREE.MeshStandardMaterial({
+    color: 0xb8bec2,
+    metalness: 0.92,
+    roughness: 0.22
+  });
 
-  const metal =
-    new THREE.MeshStandardMaterial({
-      color: 0xaeb5b9,
-      metalness: 0.9,
-      roughness: 0.25
-    });
+  // =====================================================
+  // جسم المقاومة
+  // =====================================================
 
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      0.115,
+      0.115,
+      0.46,
+      32
+    ),
+    bodyMaterial
+  );
 
-  const body =
-    new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        0.11,
-        0.11,
-        0.42,
-        20
-      ),
-      bodyMaterial
-    );
-
-
-  body.rotation.z =
-    Math.PI / 2;
+  // نخلي المقاومة أفقية
+  body.rotation.z = Math.PI / 2;
 
   body.castShadow = true;
+  body.receiveShadow = true;
 
   group.add(body);
 
+  // =====================================================
+  // نهايات الجسم
+  // =====================================================
 
-  // حلقات المقاومة
-  const bandMaterial =
-    new THREE.MeshStandardMaterial({
-      color: 0x8b4a2f,
-      roughness: 0.5
-    });
+  const endMaterial = new THREE.MeshStandardMaterial({
+    color: 0xb6a27c,
+    roughness: 0.42
+  });
+
+  const leftEnd = new THREE.Mesh(
+    new THREE.SphereGeometry(
+      0.115,
+      24,
+      16
+    ),
+    endMaterial
+  );
+
+  leftEnd.scale.set(
+    0.65,
+    1,
+    1
+  );
+
+  leftEnd.position.x = -0.23;
+
+  leftEnd.castShadow = true;
+
+  group.add(leftEnd);
 
 
-  for (
-    const x of [-0.12, 0, 0.12]
-  ) {
+  const rightEnd = new THREE.Mesh(
+    new THREE.SphereGeometry(
+      0.115,
+      24,
+      16
+    ),
+    endMaterial
+  );
 
-    const band =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.112,
-          0.012,
-          8,
-          24
-        ),
-        bandMaterial
-      );
+  rightEnd.scale.set(
+    0.65,
+    1,
+    1
+  );
 
+  rightEnd.position.x = 0.23;
 
-    band.rotation.y =
-      Math.PI / 2;
+  rightEnd.castShadow = true;
 
-    band.position.x = x;
+  group.add(rightEnd);
+
+  // =====================================================
+  // حلقات ألوان المقاومة
+  // =====================================================
+
+  const bandColors = [
+    0x7b3f22, // بني
+    0x111111, // أسود
+    0xc58b20, // ذهبي
+    0x8b4513  // بني
+  ];
+
+  const bandPositions = [
+    -0.13,
+    -0.04,
+    0.05,
+    0.14
+  ];
+
+  for (let i = 0; i < bandColors.length; i++) {
+
+    const bandMaterial =
+      new THREE.MeshStandardMaterial({
+        color: bandColors[i],
+        roughness: 0.42
+      });
+
+    const band = new THREE.Mesh(
+      new THREE.TorusGeometry(
+        0.117,
+        0.012,
+        12,
+        32
+      ),
+      bandMaterial
+    );
+
+    band.rotation.y = Math.PI / 2;
+
+    band.position.x =
+      bandPositions[i];
+
+    band.castShadow = true;
 
     group.add(band);
-
   }
 
+  // =====================================================
+  // أرجل المقاومة
+  // =====================================================
 
-  for (
-    const x of [-0.55, 0.55]
-  ) {
+  function createLead(x, direction) {
 
-    const leg =
-      new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          0.018,
-          0.018,
-          0.7,
-          10
-        ),
-        metal
-      );
+    const lead = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.018,
+        0.018,
+        0.62,
+        12
+      ),
+      metalMaterial
+    );
 
+    lead.rotation.z = Math.PI / 2;
 
-    leg.rotation.z =
-      Math.PI / 2;
+    lead.position.x = x;
 
-    leg.position.x = x;
+    lead.castShadow = true;
 
-    leg.castShadow = true;
+    group.add(lead);
 
-    group.add(leg);
-
+    return lead;
   }
 
+  createLead(-0.55, -1);
+  createLead(0.55, 1);
+
+  // =====================================================
+  // أطراف التوصيل الكهربائية
+  // =====================================================
 
   group.userData.pins = [
+
     {
       name: 'pin1',
       position: new THREE.Vector3(
-        -0.9,
+        -0.86,
         0,
         0
       )
@@ -1293,21 +1367,23 @@ function createResistor() {
     {
       name: 'pin2',
       position: new THREE.Vector3(
-        0.9,
+        0.86,
         0,
         0
       )
     }
+
   ];
 
+  // =====================================================
+  // نوع المكوّن
+  // =====================================================
 
   group.userData.componentType =
     'resistor';
 
-
   return group;
 }
-
 
 // =====================================================
 // البطارية
