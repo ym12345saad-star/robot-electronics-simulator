@@ -961,270 +961,217 @@ function spawnComponent(
 
 
 // =====================================================
-// LED - الشكل الجديد
+// LED حقيقي الشكل
 // =====================================================
 
 function createLED() {
 
-  const group =
-    new THREE.Group();
+  const group = new THREE.Group();
 
-
-  // ---------------------------------------------------
-  // خامات
-  // ---------------------------------------------------
+  const bodyMaterial =
+    new THREE.MeshPhysicalMaterial({
+      color: 0xff1f35,
+      roughness: 0.18,
+      metalness: 0.0,
+      transmission: 0.04,
+      transparent: true,
+      opacity: 0.96,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.12,
+      emissive: 0x180004,
+      emissiveIntensity: 0.35
+    });
 
   const metalMaterial =
     new THREE.MeshStandardMaterial({
       color: 0xb8bdc1,
-      metalness: 0.9,
-      roughness: 0.22
+      metalness: 0.92,
+      roughness: 0.2
     });
 
-
-  const plasticMaterial =
-    new THREE.MeshPhysicalMaterial({
-      color: 0xff1d2e,
-      roughness: 0.18,
-      metalness: 0,
-      transmission: 0.08,
-      transparent: true,
-      opacity: 0.92,
-      clearcoat: 0.8,
-      clearcoatRoughness: 0.12,
-      emissive: 0x260006,
-      emissiveIntensity: 0.35
-    });
-
-
-  const darkMaterial =
+  const baseMaterial =
     new THREE.MeshStandardMaterial({
-      color: 0x25282b,
-      roughness: 0.45,
-      metalness: 0.25
+      color: 0x242424,
+      metalness: 0.12,
+      roughness: 0.42
     });
 
+  // قاعدة الـ LED السوداء
+  const base =
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.145,
+        0.145,
+        0.075,
+        32
+      ),
+      baseMaterial
+    );
 
-  // ---------------------------------------------------
-  // جسم الـ LED السفلي
-  // ---------------------------------------------------
+  base.position.y = 0.075;
+  base.castShadow = true;
+  group.add(base);
 
+  // جسم الـ LED الأحمر
   const body =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
-        0.18,
-        0.18,
-        0.18,
+        0.135,
+        0.135,
+        0.17,
         32
       ),
-      plasticMaterial
+      bodyMaterial
     );
 
-
-  body.position.y = 0.34;
-
+  body.position.y = 0.195;
   body.castShadow = true;
-  body.receiveShadow = true;
-
   group.add(body);
 
-
-  // ---------------------------------------------------
-  // قبة الـ LED
-  // ---------------------------------------------------
-
+  // القبة العلوية
   const dome =
     new THREE.Mesh(
       new THREE.SphereGeometry(
-        0.18,
+        0.135,
         32,
-        24,
+        20,
         0,
         Math.PI * 2,
         0,
         Math.PI / 2
       ),
-      plasticMaterial
+      bodyMaterial
     );
 
-
-  dome.position.y = 0.43;
-
+  dome.position.y = 0.28;
   dome.castShadow = true;
-  dome.receiveShadow = true;
-
   group.add(dome);
 
-
-  // ---------------------------------------------------
-  // حلقة صغيرة أسفل الجسم
-  // ---------------------------------------------------
-
-  const collar =
+  // حلقة صغيرة عند قاعدة الجسم
+  const ring =
     new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        0.185,
-        0.185,
-        0.055,
+      new THREE.TorusGeometry(
+        0.137,
+        0.007,
+        8,
         32
       ),
-      darkMaterial
+      baseMaterial
     );
 
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.115;
+  group.add(ring);
 
-  collar.position.y = 0.245;
-
-  collar.castShadow = true;
-
-  group.add(collar);
-
-
-  // ---------------------------------------------------
-  // الرجل الطويلة - Anode
-  // ---------------------------------------------------
-
+  // الرجل الطويلة (+)
   const longLeg =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
-        0.025,
-        0.025,
-        0.72,
+        0.014,
+        0.014,
+        0.62,
         12
       ),
       metalMaterial
     );
 
-
   longLeg.position.set(
-    -0.075,
-    -0.05,
+    -0.055,
+    -0.235,
     0
   );
 
-
   longLeg.castShadow = true;
-
   group.add(longLeg);
 
-
-  // ---------------------------------------------------
-  // الرجل القصيرة - Cathode
-  // ---------------------------------------------------
-
+  // الرجل القصيرة (-)
   const shortLeg =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
-        0.025,
-        0.025,
-        0.58,
+        0.014,
+        0.014,
+        0.52,
         12
       ),
       metalMaterial
     );
-
 
   shortLeg.position.set(
-    0.075,
-    -0.12,
+    0.055,
+    -0.185,
     0
   );
-
 
   shortLeg.castShadow = true;
-
   group.add(shortLeg);
 
-
-  // ---------------------------------------------------
-  // أطراف صغيرة في نهاية الأرجل
-  // ---------------------------------------------------
-
-  const longTip =
+  // طرف الرجل الطويلة
+  const tip1 =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
-        0.028,
-        0.028,
-        0.08,
+        0.015,
+        0.015,
+        0.06,
         12
       ),
       metalMaterial
     );
 
-
-  longTip.position.set(
-    -0.075,
-    -0.45,
+  tip1.position.set(
+    -0.055,
+    -0.565,
     0
   );
 
+  group.add(tip1);
 
-  longTip.castShadow = true;
-
-  group.add(longTip);
-
-
-  const shortTip =
+  // طرف الرجل القصيرة
+  const tip2 =
     new THREE.Mesh(
       new THREE.CylinderGeometry(
-        0.028,
-        0.028,
-        0.08,
+        0.015,
+        0.015,
+        0.06,
         12
       ),
       metalMaterial
     );
 
-
-  shortTip.position.set(
-    0.075,
-    -0.40,
+  tip2.position.set(
+    0.055,
+    -0.465,
     0
   );
 
+  group.add(tip2);
 
-  shortTip.castShadow = true;
-
-  group.add(shortTip);
-
-
-  // ---------------------------------------------------
-  // البيانات الكهربائية
-  // ---------------------------------------------------
-
+  // أطراف التوصيل المنطقية للكهرباء
   group.userData.pins = [
     {
       name: 'anode',
       type: 'positive',
       position: new THREE.Vector3(
-        -0.075,
-        -0.49,
+        -0.055,
+        -0.595,
         0
       )
     },
-
     {
       name: 'cathode',
       type: 'negative',
       position: new THREE.Vector3(
-        0.075,
-        -0.44,
+        0.055,
+        -0.495,
         0
       )
     }
   ];
 
-
-  group.userData.componentType =
-    'led';
-
-
-  group.userData.ledMaterial =
-    plasticMaterial;
-
+  group.userData.componentType = 'led';
+  group.userData.ledMaterial = bodyMaterial;
 
   return group;
 }
-
 
 // =====================================================
 // المقاومة
